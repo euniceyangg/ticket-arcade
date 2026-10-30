@@ -788,13 +788,13 @@ export default function FairyInvaders() {
         <Link
           href="/"
           style={{
-            color: '#b8c0ff',
+            color: '#4a3f8c',
             textDecoration: 'none',
             fontSize: '0.95rem',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            background: 'rgba(255, 255, 255, 0.08)',
+            background: 'rgba(74, 63, 140, 0.1)',
             padding: '6px 14px',
             borderRadius: '99px',
             transition: 'background 0.2s',
@@ -802,7 +802,7 @@ export default function FairyInvaders() {
         >
           &larr; Back to Arcade Floor
         </Link>
-        <span style={{ fontSize: '0.9rem', color: '#ffb3c6' }}>Fairy Invaders by Ruyi 🌸</span>
+        <span style={{ fontSize: '0.9rem', color: '#8a4b63' }}>Fairy Invaders by Ruyi 🌸</span>
       </div>
 
       {/* Main 3D Dollhouse Container Frame */}
