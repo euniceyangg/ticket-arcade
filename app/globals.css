@@ -10,6 +10,8 @@
   --lime: #b6ff3b;
   --yellow: #ffe94a;
   --bad: #ff4d6d;
+  --good: #3ddc97;
+  --accent: #ffd23f;
 }
 * { box-sizing: border-box; }
 body { margin: 0; color: var(--ink); font: 22px/1.25 'VT323', monospace; min-height: 100vh;
