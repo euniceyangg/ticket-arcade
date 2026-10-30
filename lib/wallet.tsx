@@ -109,22 +109,24 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setS(latest.current);
   }, []);
 
-  const celebrate = (n: number) => setRain((r) => ({ key: r.key + 1, count: n }));
+  // These functions keep the same identity for the life of the page, so a game can safely
+  // list them as effect dependencies without restarting every time the wallet changes.
+  const celebrate = useCallback((n: number) => setRain((r) => ({ key: r.key + 1, count: n })), []);
 
-  const addTickets: Wallet['addTickets'] = (n) => {
+  const addTickets = useCallback<Wallet['addTickets']>((n) => {
     const amt = Math.floor(n);
     if (!(amt > 0)) return;
     update((p) => ({ ...p, tickets: p.tickets + amt, earned: p.earned + amt }));
-  };
+  }, [update]);
 
-  const spendTickets: Wallet['spendTickets'] = (n) => {
+  const spendTickets = useCallback<Wallet['spendTickets']>((n) => {
     const amt = Math.floor(n);
     if (!(amt > 0) || amt > latest.current.tickets) return false;
     update((p) => ({ ...p, tickets: p.tickets - amt }));
     return true;
-  };
+  }, [update]);
 
-  const finishGame: Wallet['finishGame'] = (gameId, score, tickets) => {
+  const finishGame = useCallback<Wallet['finishGame']>((gameId, score, tickets) => {
     const amt = Math.max(0, Math.floor(tickets));
     update((p) => {
       const board = [...(p.scores[gameId] ?? []), { name: p.name || 'Guest', score }]
@@ -139,9 +141,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       };
     });
     if (amt > 0) { celebrate(amt); jingle(latest.current.muted); }
-  };
+  }, [update, celebrate]);
 
-  const buyPrize: Wallet['buyPrize'] = (id) => {
+  const buyPrize = useCallback<Wallet['buyPrize']>((id) => {
     const prize = PRIZES.find((p) => p.id === id);
     if (!prize) return false;
     if (prize.stock !== null && (latest.current.stock[id] ?? 0) <= 0) return false; // sold out
@@ -154,16 +156,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     playBeep(latest.current.muted, 520, 0.1);
     setToast(`${prize.emoji} You got a ${prize.name}!`);
     return true;
-  };
+  }, [update, spendTickets]);
 
   const canClaimBonus = s.bonusDay !== today();
-  const claimBonus = () => {
+  const claimBonus = useCallback(() => {
     if (latest.current.bonusDay === today()) return false; // already claimed today
     update((p) => ({ ...p, bonusDay: today(), tickets: p.tickets + 15, earned: p.earned + 15 }));
     celebrate(15);
     jingle(latest.current.muted);
     return true;
-  };
+  }, [update, celebrate]);
+
+  const setName = useCallback((name: string) => update((p) => ({ ...p, name: name.trim().slice(0, 16) })), [update]);
+  const toggleMute = useCallback(() => update((p) => ({ ...p, muted: !p.muted })), [update]);
+  const beepSound = useCallback<Wallet['beep']>(
+    (freq = 440, dur = 0.1, type = 'square') => playBeep(latest.current.muted, freq, dur, type),
+    [],
+  );
 
   const value: Wallet = {
     ...s,
@@ -172,11 +181,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     spendTickets,
     finishGame,
     buyPrize,
-    setName: (name) => update((p) => ({ ...p, name: name.trim().slice(0, 16) })),
+    setName,
     claimBonus,
     canClaimBonus,
-    toggleMute: () => update((p) => ({ ...p, muted: !p.muted })),
-    beep: (freq = 440, dur = 0.1, type = 'square') => playBeep(s.muted, freq, dur, type),
+    toggleMute,
+    beep: beepSound,
     toast,
     rainKey: rain.key,
     rainCount: rain.count,
