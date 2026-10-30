@@ -24,8 +24,8 @@ export default function Header() {
         ))}
       </nav>
       <span className="pill">👤 {name || 'Guest'}</span>
-      <span className="pill">🎟️ {tickets}</span>
-      <button onClick={toggleMute} title="Toggle sound">{muted ? '🔇' : '🔊'}</button>
+      <span className="pill tix">🎟️ {tickets}</span>
+      <button onClick={toggleMute} title={muted ? 'Sound is off' : 'Sound is on'} aria-label="Toggle sound">{muted ? '🔇' : '🔊'}</button>
     </header>
   );
 }
