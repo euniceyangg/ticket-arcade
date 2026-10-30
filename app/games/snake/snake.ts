@@ -1,4 +1,7 @@
-Arcade.registerGame({
+// Snake by Wynne (Wzhu). Ported from the plain-HTML version on branch wynne-snake: the game
+// code is unchanged except one line in handleKeyDown (marked). It plugs in through <LegacyGame>.
+// @ts-nocheck
+export const snake = {
   id: 'snake',
   name: 'Snake',
   emoji: '🐍',
@@ -154,6 +157,7 @@ Arcade.registerGame({
     }
 
     function handleKeyDown(e) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return; // added in the port: leave Cmd/Ctrl shortcuts alone
       const key = e.key.toLowerCase();
 
       // If game is over, Space or Enter restarts; allow arrows to scroll page normally
@@ -292,4 +296,4 @@ Arcade.registerGame({
       window.removeEventListener('keydown', handleKeyDown);
     };
   },
-});
+};
