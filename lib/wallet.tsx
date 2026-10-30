@@ -43,7 +43,7 @@ type Wallet = ArcadeState & {
   claimBonus: () => boolean;
   canClaimBonus: boolean;
   toggleMute: () => void;
-  beep: (freq?: number, dur?: number) => void;
+  beep: (freq?: number, dur?: number, type?: OscillatorType) => void;
   toast: string;
   rainKey: number;
   rainCount: number;
@@ -176,7 +176,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     claimBonus,
     canClaimBonus,
     toggleMute: () => update((p) => ({ ...p, muted: !p.muted })),
-    beep: (freq = 440, dur = 0.1) => playBeep(s.muted, freq, dur),
+    beep: (freq = 440, dur = 0.1, type = 'square') => playBeep(s.muted, freq, dur, type),
     toast,
     rainKey: rain.key,
     rainCount: rain.count,
