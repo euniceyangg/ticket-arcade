@@ -3,7 +3,7 @@
 // tracking tickets on their own:
 //   const { tickets, addTickets, spendTickets, finishGame } = useWallet();
 // State is saved in localStorage (swap load/save for Supabase later).
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PRIZES } from './prizes';
 import { ACHIEVEMENTS } from './achievements';
 import { beep as playBeep, jingle } from './sound';
@@ -51,8 +51,22 @@ type Wallet = ArcadeState & {
 
 const Ctx = createContext<Wallet | null>(null);
 
+// Saved data can be old or edited by hand, so make sure the numbers are sane.
+function clean(raw: Partial<ArcadeState>): ArcadeState {
+  const base = fresh();
+  const merged = { ...base, ...raw, stock: { ...base.stock, ...raw.stock } };
+  const num = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0);
+  merged.tickets = num(merged.tickets);
+  merged.earned = num(merged.earned);
+  Object.keys(merged.stock).forEach((k) => { merged.stock[k] = num(merged.stock[k]); });
+  return merged;
+}
+
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<ArcadeState>(fresh);
+  // `latest` always holds the newest state, even between React renders. Every check
+  // ("can I afford this?") reads it, so rapid double-clicks can't spend the same tickets twice.
+  const latest = useRef<ArcadeState>(s);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState('');
   const [rain, setRain] = useState({ key: 0, count: 0 });
@@ -60,7 +74,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setS({ ...fresh(), ...JSON.parse(raw) });
+      if (raw) {
+        const loaded = clean(JSON.parse(raw));
+        latest.current = loaded;
+        setS(loaded);
+      }
     } catch {}
     setReady(true);
   }, []);
@@ -76,19 +94,19 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Apply a change, then unlock any achievements it earned.
+  // Apply a change right away, then unlock any achievements it earned.
   const update = useCallback((fn: (prev: ArcadeState) => ArcadeState) => {
-    setS((prev) => {
-      const next = fn(prev);
-      const badges = { ...next.badges };
-      ACHIEVEMENTS.forEach((a) => {
-        if (!badges[a.id] && a.test(next)) {
-          badges[a.id] = true;
-          setTimeout(() => { setToast(`${a.emoji} Achievement: ${a.name}`); jingle(next.muted); }, 0);
-        }
-      });
-      return { ...next, badges };
+    const next = fn(latest.current);
+    const badges = { ...next.badges };
+    ACHIEVEMENTS.forEach((a) => {
+      if (!badges[a.id] && a.test(next)) {
+        badges[a.id] = true;
+        setToast(`${a.emoji} Achievement: ${a.name}`);
+        jingle(next.muted);
+      }
     });
+    latest.current = { ...next, badges };
+    setS(latest.current);
   }, []);
 
   const celebrate = (n: number) => setRain((r) => ({ key: r.key + 1, count: n }));
@@ -101,8 +119,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const spendTickets: Wallet['spendTickets'] = (n) => {
     const amt = Math.floor(n);
-    if (!(amt > 0) || amt > s.tickets) return false;
-    update((p) => ({ ...p, tickets: Math.max(0, p.tickets - amt) }));
+    if (!(amt > 0) || amt > latest.current.tickets) return false;
+    update((p) => ({ ...p, tickets: p.tickets - amt }));
     return true;
   };
 
@@ -120,30 +138,30 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         scores: { ...p.scores, [gameId]: board },
       };
     });
-    if (amt > 0) { celebrate(amt); jingle(s.muted); }
+    if (amt > 0) { celebrate(amt); jingle(latest.current.muted); }
   };
 
   const buyPrize: Wallet['buyPrize'] = (id) => {
     const prize = PRIZES.find((p) => p.id === id);
-    if (!prize || s.tickets < prize.cost) return false;
-    if (prize.stock !== null && (s.stock[id] ?? 0) <= 0) return false;
+    if (!prize) return false;
+    if (prize.stock !== null && (latest.current.stock[id] ?? 0) <= 0) return false; // sold out
+    if (!spendTickets(prize.cost)) return false; // can't afford it
     update((p) => ({
       ...p,
-      tickets: p.tickets - prize.cost,
       owned: { ...p.owned, [id]: (p.owned[id] ?? 0) + 1 },
       stock: prize.stock !== null ? { ...p.stock, [id]: p.stock[id] - 1 } : p.stock,
     }));
-    playBeep(s.muted, 520, 0.1);
+    playBeep(latest.current.muted, 520, 0.1);
     setToast(`${prize.emoji} You got a ${prize.name}!`);
     return true;
   };
 
   const canClaimBonus = s.bonusDay !== today();
   const claimBonus = () => {
-    if (!canClaimBonus) return false;
+    if (latest.current.bonusDay === today()) return false; // already claimed today
     update((p) => ({ ...p, bonusDay: today(), tickets: p.tickets + 15, earned: p.earned + 15 }));
     celebrate(15);
-    jingle(s.muted);
+    jingle(latest.current.muted);
     return true;
   };
 
