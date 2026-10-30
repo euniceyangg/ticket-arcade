@@ -11,6 +11,6 @@ export const GAMES: Game[] = [
   { id: 'frogger', name: 'Frogger', emoji: '🐸', blurb: 'Help the kawaii frog hop across candy roads and dessert rivers!', author: 'Ziqing' },
   { id: 'snake', name: 'Snake', emoji: '🐍', blurb: 'Eat apples to grow, avoid the walls and your tail.', author: 'Wynne' },
   { id: 'pacman', name: 'Farm Pac-Man', emoji: '🧑‍🌾', blurb: 'Gather the daisies, dodge the jellies.', author: 'Eunice' },
-  { id: 'space-invaders', name: 'Space Invaders', emoji: '👾', blurb: 'Shoot every wave before it lands.', author: '<teammate>', soon: true },
+  { id: 'space-invaders', name: 'Fairy Invaders', emoji: '🧚', blurb: 'Whimsical 3D toy invaders! Shoot magical stars to defend the fairy realm.', author: 'Ruyi' },
   { id: 'breakout', name: 'Breakout', emoji: '🧱', blurb: 'Smash the wall of bricks.', author: '<teammate>', soon: true },
 ];
