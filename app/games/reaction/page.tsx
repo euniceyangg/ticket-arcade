@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useWallet } from '@/lib/wallet';
 
 type Phase = 'idle' | 'wait' | 'go' | 'done';
-const COLORS: Record<Phase, string> = { idle: '#c4d96a', wait: '#ff7eb6', go: '#9bbc0f', done: '#c4d96a' };
+const COLORS: Record<Phase, string> = { idle: '#8a6bff', wait: '#ff2e97', go: '#19ffa8', done: '#8a6bff' };
 
 export default function Reaction() {
   const { finishGame, beep } = useWallet();
