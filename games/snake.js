@@ -48,14 +48,14 @@ Arcade.registerGame({
       </svg>`;
 
     el.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; max-width:100%;">
         <div style="display:flex; gap:16px; font-weight:700;">
           <span>Score: <b id="sn-score" style="color:var(--accent);">0</b></span>
           <span>Tickets: <b id="sn-tix" style="color:var(--good);">0</b></span>
         </div>
         <canvas id="sn-canvas" width="${CANVAS_SIZE}" height="${CANVAS_SIZE}"
-          style="background:#0e0a1a; border:2px solid var(--line); border-radius:10px; display:block;"></canvas>
-        <div id="sn-status" style="min-height:24px; font-weight:700;"></div>
+          style="background:#0e0a1a; border:2px solid var(--line); border-radius:10px; display:block; max-width:100%; height:auto; aspect-ratio:1/1; box-sizing:border-box;"></canvas>
+        <div id="sn-status" style="min-height:24px; font-weight:700; text-align:center;"></div>
         
         <!-- Retro pixelated directional buttons -->
         <div style="display:grid; grid-template-columns: repeat(3, 50px); gap:6px; justify-content:center;">
@@ -67,7 +67,7 @@ Arcade.registerGame({
           <button id="sn-btn-right" class="dpad-btn" title="Right">${PIXEL_ARROW_RIGHT}</button>
         </div>
 
-        <button id="sn-btn-restart" class="primary" style="margin-top:6px; display:none;">Play Again</button>
+        <button id="sn-btn-restart" class="primary" style="margin-top:6px; display:none;">Play Again (Space)</button>
       </div>
       <style>
         .dpad-btn {
@@ -82,6 +82,8 @@ Arcade.registerGame({
           color: var(--accent);
           cursor: pointer;
           user-select: none;
+          -webkit-user-select: none;
+          touch-action: manipulation;
         }
         .dpad-btn:hover {
           background: var(--line);
@@ -102,7 +104,7 @@ Arcade.registerGame({
 
     let snake = [];
     let dir = { x: 1, y: 0 };
-    let nextDir = { x: 1, y: 0 };
+    let inputQueue = []; // Input buffer queue to prevent double-turn dropping & instant self-reversal
     let food = { x: 15, y: 10 };
     let score = 0;
     let gameOver = false;
@@ -115,7 +117,7 @@ Arcade.registerGame({
         { x: 3, y: 10 }
       ];
       dir = { x: 1, y: 0 };
-      nextDir = { x: 1, y: 0 };
+      inputQueue = [];
       score = 0;
       gameOver = false;
       scoreEl.textContent = '0';
@@ -141,14 +143,28 @@ Arcade.registerGame({
 
     function setDirection(newDir) {
       if (gameOver) return;
-      // Prevent reversing into oneself
-      if (newDir.x !== -dir.x || newDir.y !== -dir.y) {
-        nextDir = newDir;
+      // Compare against the latest queued direction or the current moving direction
+      const lastDir = inputQueue.length > 0 ? inputQueue[inputQueue.length - 1] : dir;
+      // Prevent 180-degree reversing into oneself
+      if (newDir.x !== -lastDir.x || newDir.y !== -lastDir.y) {
+        if (inputQueue.length < 2) {
+          inputQueue.push(newDir);
+        }
       }
     }
 
     function handleKeyDown(e) {
       const key = e.key.toLowerCase();
+
+      // If game is over, Space or Enter restarts; allow arrows to scroll page normally
+      if (gameOver) {
+        if (key === ' ' || key === 'enter') {
+          e.preventDefault();
+          resetGame();
+        }
+        return;
+      }
+
       if (['arrowup', 'w'].includes(key)) {
         setDirection({ x: 0, y: -1 });
         e.preventDefault();
@@ -166,7 +182,9 @@ Arcade.registerGame({
 
     function step() {
       if (gameOver) return;
-      dir = nextDir;
+      if (inputQueue.length > 0) {
+        dir = inputQueue.shift();
+      }
       const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
 
       // Wall collision
@@ -237,6 +255,7 @@ Arcade.registerGame({
     }
 
     function endGame() {
+      if (gameOver) return;
       gameOver = true;
       clearInterval(gameLoop);
       api.beep(200, 0.2, 'sawtooth'); // Game over sound
@@ -246,13 +265,23 @@ Arcade.registerGame({
       api.finish(score, tickets);
     }
 
-    // Event Listeners
-    window.addEventListener('keydown', handleKeyDown);
-    el.querySelector('#sn-btn-up').onclick = () => setDirection({ x: 0, y: -1 });
-    el.querySelector('#sn-btn-down').onclick = () => setDirection({ x: 0, y: 1 });
-    el.querySelector('#sn-btn-left').onclick = () => setDirection({ x: -1, y: 0 });
-    el.querySelector('#sn-btn-right').onclick = () => setDirection({ x: 1, y: 0 });
+    // Attach responsive controls (both pointerdown for zero-lag touch and click fallback)
+    function bindControl(selector, dirObj) {
+      const btn = el.querySelector(selector);
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        setDirection(dirObj);
+      });
+    }
+
+    bindControl('#sn-btn-up', { x: 0, y: -1 });
+    bindControl('#sn-btn-down', { x: 0, y: 1 });
+    bindControl('#sn-btn-left', { x: -1, y: 0 });
+    bindControl('#sn-btn-right', { x: 1, y: 0 });
     restartBtn.onclick = resetGame;
+
+    // Window keyboard listener
+    window.addEventListener('keydown', handleKeyDown);
 
     // Start game
     resetGame();
