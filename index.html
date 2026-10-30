@@ -5,61 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ticket Arcade</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
   :root {
-    --bg: #c9f23d;        /* Kirby lime */
-    --dot: #b4de2c;
-    --panel: #fff4fa;     /* soft pink-white */
-    --pink: #ff7eb6;
-    --hot: #ff4f9a;
-    --mint: #a8dcc4;      /* Sims sage-mint */
-    --gb-dark: #0f380f;   /* Game Boy greens */
-    --gb-mid: #306230;
-    --gb-light: #9bbc0f;
-    --gb-pale: #c4d96a;
-    --ink: #4a2b3d;       /* outline brown-plum */
-    --accent: #ffd23f;
-    --bad: #ff5d73;
+    --bg: #1b1233; --panel: #2a1d4d; --ink: #fff7e6; --muted: #b9a9e0;
+    --accent: #ffcf33; --good: #3ddc97; --bad: #ff5d73; --line: #4a3a7a;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; color: var(--ink); font: 22px/1.25 'VT323', monospace; min-height: 100vh;
-    background: var(--bg) radial-gradient(var(--dot) 2px, transparent 2px) 0 0 / 16px 16px; }
-  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px;
-    background: var(--hot) repeating-linear-gradient(135deg, #0000 0 10px, #fff2 10px 20px);
-    border-bottom: 4px solid var(--ink); position: sticky; top: 0; z-index: 5; }
-  header h1 { font: 14px/1.4 'Press Start 2P', monospace; margin: 0 auto 0 0; color: #fff; text-shadow: 2px 2px 0 var(--ink); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.4 system-ui, sans-serif; min-height: 100vh; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 16px; background: var(--panel); border-bottom: 2px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 1.1rem; margin: 0 auto 0 0; color: var(--accent); }
   nav { display: flex; gap: 6px; flex-wrap: wrap; }
-  nav a, button { font: inherit; color: var(--ink); background: var(--mint); border: 3px solid var(--ink); border-radius: 10px;
-    padding: 4px 12px; cursor: pointer; text-decoration: none; box-shadow: 0 3px 0 var(--ink); }
-  nav a:active, button:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
-  nav a.on { background: var(--accent); }
-  button.primary { background: var(--accent); font-weight: bold; }
-  button:disabled { opacity: .45; cursor: not-allowed; background: #ddd; }
-  .pill { background: var(--panel); border: 3px solid var(--ink); padding: 2px 12px; border-radius: 99px; }
-  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
-  h2 { margin-top: 0; font: 16px/1.5 'Press Start 2P', monospace; color: var(--ink); text-shadow: 2px 2px 0 #fff; }
-  h3 { font: 12px/1.5 'Press Start 2P', monospace; }
-  a { color: var(--hot); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
-  .card { background: var(--panel); border: 4px solid var(--ink); border-radius: 16px; padding: 14px; text-align: center; box-shadow: 4px 4px 0 var(--ink); }
-  .card:nth-child(3n+2) { background: #e8f8ef; }
-  .card:nth-child(3n) { background: #fff3cf; }
+  nav a, button { font: inherit; color: var(--ink); background: var(--line); border: 0; border-radius: 8px; padding: 8px 12px; cursor: pointer; text-decoration: none; }
+  nav a.on { background: var(--accent); color: #2a1d4d; font-weight: 700; }
+  button.primary { background: var(--accent); color: #2a1d4d; font-weight: 700; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .pill { background: #0006; padding: 6px 12px; border-radius: 99px; font-weight: 700; }
+  main { max-width: 900px; margin: 0 auto; padding: 16px; }
+  h2 { margin-top: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 14px; text-align: center; }
   .card .big { font-size: 3rem; }
-  .muted { opacity: .75; }
-  input[type=text] { font: inherit; padding: 6px 10px; border-radius: 10px; border: 3px solid var(--ink); background: #fff; color: var(--ink); }
-  .moles { display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; justify-content: center; margin: 16px 0; padding: 16px;
-    background: var(--gb-light); border: 4px solid var(--gb-dark); border-radius: 12px; width: max-content; margin-inline: auto; }
-  .hole { width: 90px; height: 90px; border-radius: 50%; background: var(--gb-mid); border-color: var(--gb-dark); font-size: 2.6rem; display: grid; place-items: center; padding: 0; box-shadow: inset 0 6px 0 var(--gb-dark); }
-  .react { height: 200px; border: 4px solid var(--gb-dark); border-radius: 12px; display: grid; place-items: center; font: 14px/1.6 'Press Start 2P', monospace; cursor: pointer; user-select: none; text-align: center; padding: 8px; color: var(--gb-dark); }
-  table { width: 100%; border-collapse: collapse; background: var(--gb-pale); border: 4px solid var(--gb-dark); color: var(--gb-dark); }
-  td, th { padding: 4px 10px; border-bottom: 2px solid var(--gb-mid); text-align: left; }
-  .badge { opacity: .4; filter: grayscale(1); }
+  .muted { color: var(--muted); font-size: .9rem; }
+  input[type=text] { font: inherit; padding: 10px; border-radius: 8px; border: 2px solid var(--line); background: #0004; color: var(--ink); }
+  .moles { display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; justify-content: center; margin: 16px 0; }
+  .hole { width: 90px; height: 90px; border-radius: 50%; background: #0006; font-size: 2.6rem; display: grid; place-items: center; padding: 0; }
+  .react { height: 200px; border-radius: 12px; display: grid; place-items: center; font-size: 1.4rem; font-weight: 700; cursor: pointer; user-select: none; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+  .badge { opacity: .35; filter: grayscale(1); }
   .badge.got { opacity: 1; filter: none; }
-  .tag { display: inline-block; font-size: .8rem; padding: 0 10px; border-radius: 99px; background: var(--bad); color: #fff; border: 2px solid var(--ink); }
+  .tag { display: inline-block; font-size: .75rem; padding: 2px 8px; border-radius: 99px; background: var(--bad); color: #fff; }
   #rain { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
   #rain span { position: absolute; top: -40px; font-size: 2rem; animation: fall 1.8s ease-in forwards; }
   @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
-  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--panel); color: var(--ink); border: 4px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 8px 16px; border-radius: 12px; display: none; z-index: 30; }
+  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #2a1d4d; padding: 10px 16px; border-radius: 10px; font-weight: 700; display: none; z-index: 30; }
 </style>
 </head>
 <body>
