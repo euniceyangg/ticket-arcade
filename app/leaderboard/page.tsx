@@ -8,7 +8,7 @@ export default function Leaderboard() {
     <>
       <h2>Leaderboard</h2>
       <p className="muted">Top 5 per game on this device.</p>
-      {GAMES.map((g) => {
+      {GAMES.filter((g) => !g.soon).map((g) => {
         const rows = scores[g.id] ?? [];
         return (
           <div key={g.id}>

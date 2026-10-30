@@ -19,7 +19,7 @@ npm run dev   # http://localhost:3000
 | Prize shop / shelf / leaderboard / badges / door | `app/prizes`, `app/shelf`, `app/leaderboard`, `app/badges`, `app/door` |
 
 ## Add your game
-1. Add one line to `lib/games.ts` (id, name, emoji, blurb, author).
+1. Add one line to `lib/games.ts` (id, name, emoji, blurb, author). Placeholders have `soon: true`; remove it once your game works.
 2. Create `app/games/<id>/page.tsx` (see `app/games/mole/page.tsx` for an example).
 3. Use the wallet, never your own counter:
    ```tsx
