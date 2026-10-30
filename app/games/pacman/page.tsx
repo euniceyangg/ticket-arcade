@@ -146,6 +146,7 @@ export default function Pacman() {
       w: UP, s: DOWN, a: LEFT, d: RIGHT, W: UP, S: DOWN, A: LEFT, D: RIGHT,
     };
     const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return; // leave real shortcuts (Cmd+S, Ctrl+A...) alone
       const d = keys[e.key];
       if (!d) return;
       e.preventDefault(); // don't scroll the page
